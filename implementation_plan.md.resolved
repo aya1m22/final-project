@@ -1,0 +1,329 @@
+ FASHIONAI — DAY-BY-DAY TASK BREAKDOWN
+April 30 → May 12 (13 Days)
+================================================================================ 🔴 DAY 1 — Wednesday, April 30, 2026
+THEME: Project Setup & Database Foundation
+MORNING (4-5 hours):
+TASK-001: Initialize Git repo + professional README.md
+TASK-002: Create monorepo folders: /frontend, /backend, /ai-service, /database, /docs
+TASK-007: Configure ESLint + Prettier + Husky pre-commit hooks
+TASK-008: Create Jira board / GitHub Projects with all tickets
+AFTERNOON (4-5 hours):
+5. TASK-003: Design complete ERD (dbdiagram.io) — ALL tables
+6. TASK-004: Write database migrations (Prisma schema + migrate)
+7. TASK-005: Seed database with 50+ realistic fashion products
+8. TASK-006: Set up .env.example files
+END OF DAY CHECK:
+□ Git repo pushed
+□ Database connects successfully
+□ Seeded data visible in DB
+□ Jira board created
+□ No lint errors
+================================================================================ 🔴 DAY 2 — Thursday, May 1, 2026
+THEME: Authentication System (Backend + Frontend)
+MORNING (Backend - 4-5 hours):
+TASK-009: JWT auth system (register/login/logout/refresh tokens)
+TASK-010: Password hashing with bcrypt (12 rounds)
+TASK-011: Email verification (Nodemailer + Ethereal)
+TASK-012: User roles middleware (customer, admin, vendor)
+AFTERNOON (Frontend - 4-5 hours):
+5. TASK-013: Login page (React Hook Form + Zod validation)
+6. TASK-014: Register page (password strength indicator)
+7. TASK-015: Protected routes (React Router + Auth Context)
+8. TASK-016: Global toast notification system (Sonner)
+END OF DAY CHECK:
+□ Can register a new user
+□ Can login and see protected pages
+□ Invalid credentials show error toast
+□ Token stored securely
+□ Logout clears everything
+================================================================================ 🔴 DAY 3 — Friday, May 2, 2026
+THEME: Design System & Homepage
+MORNING (Design System - 4-5 hours):
+TASK-017: Document design system in /docs/design.md
+Colors: #000000 (primary), #FF0050 (accent), #F5F5F5 (bg)
+Font: Poppins (headings) + Inter (body)
+Spacing: 8px grid
+TASK-018: Build reusable component library:
+Navbar (mega menu, search, cart badge, user dropdown)
+ProductCard (image carousel, quick view, wishlist heart, price, rating)
+Footer (newsletter, links, social icons)
+CategoryPill, FilterSidebar, SortDropdown
+AFTERNOON (Homepage - 4-5 hours):
+3. TASK-019: Hero Section (auto-sliding banner, 3 fashion campaigns)
+4. TASK-020: Category Grid (Women, Men, Kids, Accessories, Beauty)
+5. TASK-021: "Trending Now" horizontal product carousel
+6. TASK-022: "New Arrivals" section with skeleton loading
+7. TASK-023: Dark mode toggle (optional but impressive)
+8. TASK-024: Mobile-responsive nav (hamburger + bottom tab bar)
+END OF DAY CHECK:
+□ Homepage looks like Shein-level quality
+□ All animations smooth (Framer Motion)
+□ Mobile view perfect
+□ No console errors
+□ Images lazy-loaded
+================================================================================ 🔴 DAY 4 — Saturday, May 3, 2026
+THEME: Product Catalog & Search
+MORNING (Backend APIs - 4-5 hours):
+TASK-025: Product API (GET /products, GET /products/:id)
+TASK-026: Category API (hierarchical structure)
+TASK-027: Full-text search (PostgreSQL tsvector)
+TASK-028: Pagination + filtering backend
+AFTERNOON (Frontend Pages - 4-5 hours):
+5. TASK-029: Product Listing Page (PLP) — grid/list toggle
+6. TASK-030: Advanced filters sidebar (price slider, size, color, brand, rating)
+7. TASK-031: Search bar with autocomplete (debounced 300ms)
+8. TASK-032: Breadcrumb navigation
+9. TASK-033: URL sync with filters (shareable links)
+10. TASK-034: "Recently Viewed" section (localStorage)
+END OF DAY CHECK:
+□ Can browse products by category
+□ Search works with autocomplete
+□ Filters update URL
+□ Pagination/infinite scroll smooth
+□ Mobile filters work
+================================================================================ 🔴 DAY 5 — Sunday, May 4, 2026
+THEME: Product Detail Page & Cart System
+MORNING (Product Detail - 4-5 hours):
+TASK-035: Product Detail Page (PDP):
+Image gallery (zoom, thumbnails, fullscreen)
+Size selector + size guide modal
+Color swatches
+Quantity stepper
+"Add to Cart" with fly-to-cart animation
+Description tabs (Details, Size & Fit, Shipping, Reviews)
+AFTERNOON (Cart System - 4-5 hours):
+2. TASK-036: Backend Cart API (GET, POST, PUT, DELETE)
+3. TASK-037: Guest cart → merge on login
+4. TASK-038: Cart sidebar/drawer (slide from right)
+- Item list with image, name, size, color, qty, price
+- Quantity update + remove
+- Cart summary (subtotal, shipping, total)
+- "Checkout" CTA
+5. TASK-039: Wishlist functionality (heart toggle + wishlist page)
+6. TASK-040: "You May Also Like" carousel (same category)
+END OF DAY CHECK:
+□ Product images zoom and gallery works
+□ Add to cart updates badge with animation
+□ Cart drawer opens smoothly
+□ Can update quantities and remove items
+□ Wishlist persists
+================================================================================ 🔴 DAY 6 — Monday, May 5, 2026
+THEME: Checkout & Payment Flow
+MORNING (Backend - 4-5 hours):
+TASK-041: Order creation API (validate stock, calculate totals)
+TASK-042: Address management API (CRUD shipping addresses)
+TASK-043: Payment integration mock (Stripe test mode)
+TASK-044: COD (Cash on Delivery) order flow
+AFTERNOON (Frontend - 4-5 hours):
+5. TASK-045: Multi-step checkout wizard:
+- Step 1: Shipping Address
+- Step 2: Delivery Options
+- Step 3: Payment Method (Card, COD)
+- Step 4: Review Order
+- Step 5: Order Confirmation (confetti animation!)
+6. TASK-046: Order history page (status badges)
+7. TASK-047: Order detail page (tracking timeline)
+8. TASK-048: Backend order status update (admin)
+END OF DAY CHECK:
+□ Complete checkout flow works end-to-end
+□ COD order creates successfully
+□ Order confirmation shows confetti
+□ Order appears in history
+□ Stock decreases after order
+================================================================================ 🔴 DAY 7 — Tuesday, May 6, 2026
+THEME: Admin Dashboard & User Profile
+MORNING (Admin Panel - 4-5 hours):
+TASK-049: Admin Dashboard layout (sidebar + stats cards)
+TASK-050: Admin Product Management (CRUD table, search, filters)
+TASK-051: Admin Order Management (update status, view details)
+TASK-052: Admin User Management (view, ban/unban)
+TASK-056: Admin middleware (role-based access)
+AFTERNOON (User Area + Charts - 4-5 hours):
+6. TASK-053: User Profile Page (edit info, change password, avatar)
+7. TASK-054: User Address Book (add/edit/delete)
+8. TASK-055: Image upload to Cloudinary (products + avatars)
+9. TASK-057: Charts for admin (Recharts: sales, top products)
+END OF DAY CHECK:
+□ Admin can add/edit/delete products
+□ Admin can update order statuses
+□ User can update profile and upload avatar
+□ Charts show real data
+□ Non-admin cannot access /admin
+================================================================================ 🔴 DAY 8 — Wednesday, May 7, 2026
+THEME: AI Backend — Style Advisor & Occasion Builder
+MORNING (Setup + Style Advisor - 4-5 hours):
+TASK-058: Set up Python FastAPI microservice
+TASK-059: AI Style Advisor endpoint:
+Input: Full-body photo + occasion selection
+Process: CLIP/ResNet50 analyze body type, skin tone
+Output: JSON with body_type, recommended_styles, color_palette
+TASK-062: AI recommendation database table
+AFTERNOON (Occasion Builder + Smart Search - 4-5 hours):
+4. TASK-060: "Occasion Builder" endpoint:
+- Input: Occasion text + budget + style
+- Process: NLP + product DB query
+- Output: Complete outfit set with total price
+5. TASK-061: Smart Search endpoint:
+- Input: Natural language query
+- Process: NLP entity extraction → SQL builder
+- Output: Matching products
+6. TASK-063: Node.js API gateway to Python AI service
+END OF DAY CHECK:
+□ AI service running on separate port
+□ Can upload photo and get style analysis
+□ Occasion builder returns outfit sets
+□ Smart search understands natural language
+□ Fallback works if AI is slow
+================================================================================ 🔴 DAY 9 — Thursday, May 8, 2026
+THEME: AI Frontend Integration
+MORNING (AI Pages - 4-5 hours):
+TASK-064: "AI Style Advisor" page:
+Photo upload zone (drag & drop, preview, crop)
+Occasion selector chips
+Loading skeleton animation
+Results: Body analysis + recommended products grid
+"Add All to Cart" button
+TASK-065: "Occasion Builder" widget (homepage prominent):
+Chat-like interface
+Budget slider
+AI outfit cards with "Shop This Look"
+AFTERNOON (AI Enhancements - 4-5 hours):
+3. TASK-066: AI-powered search bar (natural language placeholder)
+4. TASK-067: "For You" personalized homepage section
+5. TASK-068: AI confidence score display ("98% match")
+6. TASK-069: Error handling — AI down → "Basic Recommendations"
+END OF DAY CHECK:
+□ AI Style Advisor page works end-to-end
+□ Occasion Builder on homepage
+□ Natural language search works
+□ Loading states are beautiful
+□ Fallback handles AI failures gracefully
+================================================================================ 🔴 DAY 10 — Friday, May 9, 2026
+THEME: Reviews, Ratings & Social Features
+MORNING (Backend - 4-5 hours):
+TASK-070: Review system (CRUD, rating 1-5, photo reviews, helpful votes)
+TASK-071: Review moderation (flag inappropriate content)
+AFTERNOON (Frontend - 4-5 hours):
+3. TASK-072: Product reviews section (star breakdown, review cards)
+4. TASK-073: Write a review modal (with photo upload)
+5. TASK-074: "Customers Also Bought" carousel
+6. TASK-075: Share product buttons (copy link, social)
+7. TASK-076: Recently viewed products (enhanced)
+8. TASK-077: Size guide modal with measurement visuals
+9. TASK-078: Stock indicator ("Only 3 left!" urgency badge)
+END OF DAY CHECK:
+□ Can write reviews with photos
+□ Star ratings display correctly
+□ Share buttons work
+□ Stock urgency badges show
+□ Size guide has visuals
+================================================================================ 🔴 DAY 11 — Saturday, May 10, 2026
+THEME: Testing Phase — Part 1 (Unit & Integration Tests)
+MORNING (Backend Tests - 4-5 hours):
+TASK-079: Unit tests for ALL backend APIs:
+Auth: register, login, validation errors (3+ tests each)
+Product: CRUD, filters, search
+Cart: add, update, remove, merge
+Order: create, status update
+TASK-080: Integration tests for checkout flow
+AFTERNOON (Frontend Tests + Audit - 4-5 hours):
+3. TASK-081: Component tests (React Testing Library):
+- ProductCard, CartDrawer, CheckoutForm
+4. TASK-082: Lighthouse audit (Perf >80, A11y >90, SEO >90)
+5. TASK-083: Fix critical bugs found
+6. TASK-084: Cross-browser test (Chrome, Firefox, Safari)
+7. TASK-085: Mobile test (iPhone SE, iPhone 14, Galaxy)
+END OF DAY CHECK:
+□ All backend tests passing
+□ Coverage report > 70%
+□ Lighthouse scores meet targets
+□ No critical bugs
+□ Mobile views perfect
+================================================================================ 🔴 DAY 12 — Sunday, May 11, 2026
+THEME: Testing Phase — Part 2 + Performance & Security
+MORNING (Performance + Security - 4-5 hours):
+TASK-086: API load testing (100 concurrent users)
+TASK-087: Database optimization (indexes, fix N+1 queries)
+TASK-091: Security audit:
+XSS protection (sanitize inputs)
+CSRF tokens
+Rate limiting on auth
+SQL injection prevention (ORM only)
+AFTERNOON (Optimization - 4-5 hours):
+4. TASK-088: Image optimization (WebP, lazy loading)
+5. TASK-089: Code splitting (React.lazy + Suspense)
+6. TASK-090: React Query caching strategy
+7. TASK-092: Final bug fixes from Day 11
+8. TASK-093: Secure production .env (no secrets in repo)
+END OF DAY CHECK:
+□ Load test passes (100 users)
+□ API response < 200ms (p95)
+□ Security checklist complete
+□ Images optimized
+□ Build succeeds with no errors
+================================================================================ 🔴 DAY 13 — Monday, May 12, 2026
+THEME: Deployment & Presentation Day
+MORNING (Deployment - 4-5 hours):
+TASK-094: Deploy backend (Render/Railway)
+TASK-095: Deploy frontend (Vercel/Netlify)
+TASK-096: Deploy AI microservice (Render/PythonAnywhere)
+TASK-097: Set up production database (Supabase/Railway)
+TASK-098: Configure custom domain
+TASK-099: SSL certificate (HTTPS mandatory)
+TASK-100: Final smoke test on production URL
+AFTERNOON (Presentation - 4-5 hours):
+8. TASK-101: Prepare presentation slides (15 min):
+- Slide 1: Title + Team + Problem (Lebanon fashion gap)
+- Slide 2: Solution Overview
+- Slide 3: Architecture Diagram
+- Slide 4: Database Schema
+- Slide 5: AI Feature Demo (Style Advisor + Occasion Builder)
+- Slide 6: Live Demo (search → product → cart → checkout)
+- Slide 7: Tech Stack & Challenges
+- Slide 8: Future Roadmap
+9. TASK-102: Practice demo script (2 times)
+10. TASK-103: Prepare retrospective notes
+11. TASK-104: Final code review (no console.logs, no dead code)
+12. TASK-105: GitHub repo polish (screenshots, GIFs, architecture diagram)
+END OF DAY CHECK:
+□ Website live on HTTPS
+□ All features working on production
+□ Presentation slides complete
+□ Demo rehearsed twice
+□ GitHub README is professional
+□ Ready for jury!
+================================================================================ 📊 SUMMARY TABLE
+Table
+Day	Date	Theme	Tasks	Hours
+1	Apr 30 Wed	Project Setup & Database	8	8-10
+2	May 1 Thu	Authentication System	8	8-10
+3	May 2 Fri	Design System & Homepage	8	8-10
+4	May 3 Sat	Product Catalog & Search	10	8-10
+5	May 4 Sun	Product Detail & Cart	6	8-10
+6	May 5 Mon	Checkout & Payment	8	8-10
+7	May 6 Tue	Admin Dashboard & User Profile	9	8-10
+8	May 7 Wed	AI Backend Development	6	8-10
+9	May 8 Thu	AI Frontend Integration	6	8-10
+10	May 9 Fri	Reviews & Social Features	9	8-10
+11	May 10 Sat	Testing Phase Part 1	7	8-10
+12	May 11 Sun	Testing Phase Part 2	8	8-10
+13	May 12 Mon	Deployment & Presentation	12	8-10
+-----	------------	--------------------------------	-------	-------
+TOTAL	105	~117
+================================================================================ 🎯 DAILY COPILOT PROMPT TEMPLATE
+Copy and paste this to Copilot every morning:
+Today is [DATE]. We are working on DAY [X] of the FashionAI graduation project.
+Your tasks for today are listed in PLAN.md under "DAY [X]".
+RULES:
+Complete EVERY task listed for today before stopping.
+Follow the CODE QUALITY RULES: zero lint errors, zero test failures, zero console errors.
+Use Framer Motion for ALL animations.
+Use Zustand for state management.
+Use React Query for data fetching.
+Design must be pixel-perfect, mobile-first, and look like a $1M startup.
+After completing each task, update PLAN.md and mark it [x] COMPLETED.
+Run tests before finishing. No errors allowed.
+If a task is too big, split it but finish the day's scope.
+Commit code with clear messages after every major feature.
+Current blockers (if any): [list here]
+================================================================================
