@@ -1,0 +1,23 @@
+Summary,Description,Acceptance Criteria,Priority,Estimate (hours),Labels
+"TASK-001: Repo & README","Initialize Git repo and add README with quickstart, architecture, env examples","README contains quickstart, architecture diagram, env var examples",High,1,day1,setup
+"TASK-002: Monorepo skeleton","Create /frontend,/backend,/ai-service,/database,/docs with placeholders","Folders exist and npm install works in frontend and backend",High,1,day1,setup
+"TASK-003: ERD & Migrations","Design ERD and write Prisma schema + migrations","schema.prisma + migration files present; seed script exists",High,3,day1,database
+"TASK-007: Lint+Prettier+Husky","Add ESLint, Prettier, Husky pre-commit hooks","npm run lint passes; pre-commit auto-formats staged files",Medium,2,day1,ci
+"TASK-009: JWT Auth","Implement register/login/logout/refresh tokens","Register/login returns tokens; refresh returns new access token",High,4,day2,auth
+"TASK-010: Password hashing","Hash passwords using bcrypt (12 rounds)","Stored passwords are hashed; login verifies hash",High,1,day2,security
+"TASK-011: Email verification","Send verification email (Nodemailer + Ethereal for dev)","Registration sends Ethereal preview URL; verify marks user verified",Medium,2,day2,auth
+"TASK-012: Roles middleware","Add role middleware for customer/admin/vendor","Non-admins receive 403 for admin routes",Medium,1.5,day2,auth
+"TASK-017: Design tokens","Finalize colors, typography, spacing in docs/design.md","docs/design.md updated; components use tokens",Medium,2,day3,design
+"TASK-018: Component library","Implement Navbar,ProductCard,Footer,CategoryPill,FilterSidebar,SortDropdown","Components created and used in pages",Medium,4,day3,ui
+"TASK-019: Homepage features","Hero carousel, category grid, trending carousel, new-arrivals skeleton","Homepage responsive with skeletons and toggles",Medium,4,day3,ui
+"TASK-025: Product API","Implement product listing and detail endpoints with pagination and filters","GET /api/products supports q,page,limit,category",High,3,day4,api
+"TASK-026: Category API","Return category hierarchy for filters","GET /api/products/categories returns categories array",Medium,1,day4,api
+"TASK-027: Full-text search (prod)","Implement Postgres tsvector indexing for production","Search returns relevant results; indexed for perf",Medium,3,day4,search
+"TASK-028: Pagination & Filters","Implement backend pagination, sorting, and filters","Backend accepts filters and returns paged results",Medium,3,day4,api
+"TASK-035: PDP UX","Image gallery, size/color selectors, description tabs, add-to-cart","PDP shows images and selectors; add-to-cart updates cart",High,4,day5,ui
+"TASK-036: Cart API","Cart endpoints (GET, add, update qty, remove, clear)","Cart endpoints update items per user",High,3,day5,api
+"TASK-037: Guest cart merge","Merge guest local cart into user cart on login","Guest items appear in user cart after login",Medium,2,day5,ux
+"TASK-039: Wishlist","Wishlist toggle and wishlist page persisted per user","Wishlist saved per user and toggled from PDP/PLP",Low,2,day5,ux
+"TASK-041: Orders API","Create orders, validate stock, calculate totals; admin can update statuses","Orders can be created, listed, fetched, and status updated",High,3,day6,api
+"TASK-042: Addresses CRUD","Add address book CRUD endpoints","Addresses persisted per user and selectable in checkout",Medium,2,day6,api
+"TASK-043: Payment mock & COD","Integrate mock card flow and COD option","Card payments simulated; COD creates pending order",High,3,day6,payment
