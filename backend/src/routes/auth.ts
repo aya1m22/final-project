@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 
@@ -22,12 +22,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret';
 
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
   if (!email || !password) return res.status(400).json({ message: 'Missing email or password' });
   if (users.has(email)) return res.status(409).json({ message: 'User already exists' });
-  const hashed = await bcrypt.hash(password, 12);
+  const hashed = bcrypt.hashSync(password, 12);
   const verificationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1d' });
-  const user: User = { id: idCounter++, email, password: hashed, role: 'customer', verified: false, verificationToken };
+  const user: User = { id: idCounter++, email, password: hashed, role: role || 'customer', verified: false, verificationToken };
   users.set(email, user);
 
   // Send verification email using Ethereal (dev) or SMTP from env if provided
@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = users.get(email);
   if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-  const match = await bcrypt.compare(password, user.password);
+  const match = bcrypt.compareSync(password, user.password);
   if (!match) return res.status(401).json({ message: 'Invalid credentials' });
   const accessToken = jwt.sign({ sub: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ sub: user.id, email: user.email }, JWT_REFRESH_SECRET, { expiresIn: '7d' });

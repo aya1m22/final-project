@@ -1,40 +1,54 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
-type CartItem = { productId: number; qty: number; title?: string; price?: number };
+interface CartItem {
+  id: number; name: string; brand: string; price: number;
+  image: string; size: string; color: string; quantity: number;
+}
 
-const CartContext = createContext<any>(null);
+interface CartContextValue {
+  items: CartItem[]; isOpen: boolean;
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  removeItem: (id: number) => void;
+  updateQuantity: (id: number, quantity: number) => void;
+  openCart: () => void; closeCart: () => void;
+  total: number; itemCount: number;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const raw = localStorage.getItem('cart');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
-  const { user } = useAuth();
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
-
-  const addToCart = async (item: CartItem) => {
-    // simple local merge
-    setItems((s) => {
-      const found = s.find((it) => it.productId === item.productId);
-      if (found) return s.map((it) => (it.productId === item.productId ? { ...it, qty: it.qty + item.qty } : it));
-      return [...s, item];
+  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>) => {
+    setItems(current => {
+      const existing = current.find(item => item.id === newItem.id && item.size === newItem.size && item.color === newItem.color);
+      if (existing) {
+        return current.map(item => item.id === newItem.id && item.size === newItem.size && item.color === newItem.color ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...current, { ...newItem, quantity: 1 }];
     });
-  };
+    setIsOpen(true);
+  }, []);
 
-  const removeFromCart = (productId: number) => setItems((s) => s.filter((i) => i.productId !== productId));
-  const clearCart = () => setItems([]);
+  const removeItem = useCallback((id: number) => {
+    setItems(current => current.filter(item => item.id !== id));
+  }, []);
+
+  const updateQuantity = useCallback((id: number, quantity: number) => {
+    if (quantity <= 0) { setItems(current => current.filter(item => item.id !== id)); return; }
+    setItems(current => current.map(item => item.id === id ? { ...item, quantity } : item));
+  }, []);
+
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ open: () => setOpenDrawer(true), close: () => setOpenDrawer(false), openDrawer, items, addToCart, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{
+      items, isOpen, addItem, removeItem, updateQuantity,
+      openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false),
+      total, itemCount
+    }}>
       {children}
     </CartContext.Provider>
   );
