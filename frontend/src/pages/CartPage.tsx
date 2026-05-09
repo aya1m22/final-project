@@ -32,7 +32,7 @@ export default function CartPage() {
 
   return (
     <PageTransition>
-      <div className="pt-32 pb-40">
+      <div className="pt-40 pb-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="mb-16">
             <p className="text-gold tracking-[0.5em] uppercase text-[10px] mb-4 font-bold">Review Selections</p>

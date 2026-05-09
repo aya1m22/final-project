@@ -56,7 +56,7 @@ export default function ProductDetailPage() {
 
   return (
     <PageTransition>
-      <div className="pt-32 pb-40">
+      <div className="pt-40 pb-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
             

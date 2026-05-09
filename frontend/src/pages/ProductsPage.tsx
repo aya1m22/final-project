@@ -72,7 +72,7 @@ export default function ProductsPage() {
 
   return (
     <PageTransition>
-      <div className="pt-32 min-h-screen">
+      <div className="pt-40 min-h-screen">
         {/* Page Header */}
         <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-20 text-center">
           <motion.p 

@@ -15,8 +15,8 @@
   --color-text-3: #5A5248;
   --color-red: #E05C5C;
   --color-green: #4CAF80;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ─── Base Styles ─── */

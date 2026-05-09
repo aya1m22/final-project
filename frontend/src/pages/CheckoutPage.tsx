@@ -65,7 +65,7 @@ export default function CheckoutPage() {
 
   return (
     <PageTransition>
-      <div className="pt-32 pb-40">
+      <div className="pt-40 pb-40">
         <div className="max-w-6xl mx-auto px-6 lg:px-12">
           
           {/* Progress */}
