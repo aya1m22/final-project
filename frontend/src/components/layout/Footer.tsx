@@ -1,64 +1,103 @@
-import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Youtube } from 'lucide-react';
+
+const SHOP_LINKS = [
+  { to: '/products?category=women', label: 'Women' },
+  { to: '/products?category=men', label: 'Men' },
+  { to: '/products?category=accessories', label: 'Accessories' },
+  { to: '/products', label: 'New Arrivals' },
+];
+
+const COMPANY_LINKS = [
+  { to: '#', label: 'About' },
+  { to: '#', label: 'Careers' },
+  { to: '#', label: 'Sustainability' },
+  { to: '#', label: 'Press' },
+];
+
+const HELP_LINKS = [
+  { to: '#', label: 'FAQ' },
+  { to: '#', label: 'Shipping' },
+  { to: '#', label: 'Returns' },
+  { to: '#', label: 'Size Guide' },
+  { to: '#', label: 'Contact' },
+];
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
-
-  const footerLinks = {
-    shop: ['Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories', 'Shoes'],
-    company: ['About', 'AI Stylist', 'Careers', 'Press', 'Contact'],
-    help: ['FAQ', 'Shipping', 'Returns', 'Size Guide', 'Track Order'],
-  };
-
   return (
-    <footer className="bg-background border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-          <div className="lg:col-span-2">
-            <Link to="/" className="font-serif text-2xl tracking-widest text-foreground">FASHIONAI</Link>
-            <p className="mt-4 text-foreground-muted text-sm leading-relaxed max-w-sm">
-              AI-powered fashion discovery. We combine cutting-edge artificial intelligence with curated style to bring you a shopping experience that's uniquely yours.
+    <footer style={{ background: 'var(--color-bg-1)', borderTop: '1px solid var(--color-border)' }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          {/* Brand */}
+          <div>
+            <Link to="/" className="font-display text-2xl italic text-gold">AURA</Link>
+            <p className="text-text-2 text-sm mt-3 leading-relaxed">
+              AI-powered luxury fashion.<br />Your personal stylist, available 24/7.
             </p>
-            <div className="flex gap-4 mt-6">
-              {[Instagram, Twitter, Youtube].map((Icon, i) => (
-                <a key={i} href="#" className="text-foreground-muted hover:text-accent transition-colors"><Icon size={20} /></a>
+            {/* Social Icons */}
+            <div className="flex gap-4 mt-5">
+              {['Instagram', 'TikTok', 'Pinterest'].map((name) => (
+                <a key={name} href="#" className="text-text-3 hover:text-gold transition-colors text-xs tracking-wider">
+                  {name}
+                </a>
               ))}
             </div>
           </div>
 
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h4 className="text-xs tracking-widest text-foreground-secondary uppercase mb-6">{title}</h4>
-              <ul className="space-y-3">
-                {links.map(name => (
-                  <li key={name}><Link to="/" className="text-sm text-foreground-muted hover:text-foreground transition-colors">{name}</Link></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+          {/* Shop */}
+          <div>
+            <h4 className="font-display text-lg text-text mb-4">Shop</h4>
+            <ul className="space-y-2.5">
+              {SHOP_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link to={l.to} className="text-sm text-text-2 hover:text-gold transition-colors">{l.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="mt-16 pt-12 border-t border-border">
-          <div className="max-w-xl mx-auto text-center">
-            <p className="text-xs tracking-widest text-accent uppercase mb-2">Join the Inner Circle</p>
-            <h3 className="font-serif text-3xl text-foreground mb-4">Be the First to Know</h3>
-            <p className="text-foreground-muted text-sm mb-8">Get exclusive access to new arrivals and AI-curated style drops.</p>
-            <div className="flex gap-0 max-w-md mx-auto">
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" className="flex-1 bg-background-elevated border border-border text-foreground px-6 py-4 text-sm focus:outline-none focus:border-accent placeholder:text-foreground-muted" />
-              <button className="bg-accent text-background px-8 py-4 text-sm uppercase tracking-widest font-medium hover:bg-accent-hover transition-colors">Subscribe</button>
-            </div>
+          {/* Help */}
+          <div>
+            <h4 className="font-display text-lg text-text mb-4">Help</h4>
+            <ul className="space-y-2.5">
+              {HELP_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link to={l.to} className="text-sm text-text-2 hover:text-gold transition-colors">{l.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h4 className="font-display text-lg text-text mb-4">Stay in Touch</h4>
+            <p className="text-sm text-text-2 mb-4">Subscribe for exclusive offers and style updates.</p>
+            <form className="flex" onSubmit={(e) => e.preventDefault()}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="flex-1 px-3 py-2 text-sm rounded-l-md outline-none"
+                style={{ background: 'var(--color-bg-2)', border: '1px solid var(--color-border)', borderRight: 'none' }}
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm rounded-r-md transition-colors"
+                style={{ background: 'var(--color-gold)', color: 'var(--color-bg)' }}
+              >
+                →
+              </button>
+            </form>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-foreground-muted">© 2026 FASHIONAI. All rights reserved.</p>
+      {/* Bottom Bar */}
+      <div style={{ borderTop: '1px solid var(--color-border)' }} className="py-5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-text-3">© 2025 AURA. All rights reserved.</p>
           <div className="flex gap-6">
-            {['Privacy Policy', 'Terms of Service', 'Cookies'].map(link => (
-              <Link key={link} to="/" className="text-xs text-foreground-muted hover:text-foreground transition-colors">{link}</Link>
-            ))}
+            <a href="#" className="text-xs text-text-3 hover:text-text-2 transition-colors">Privacy</a>
+            <a href="#" className="text-xs text-text-3 hover:text-text-2 transition-colors">Terms</a>
+            <a href="#" className="text-xs text-text-3 hover:text-text-2 transition-colors">Cookies</a>
           </div>
         </div>
       </div>

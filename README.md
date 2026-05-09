@@ -1,44 +1,145 @@
-# FASHIONAI
+# AURA — AI-Powered Fashion E-Commerce Platform
 
-Monorepo scaffold for the Graduation project.
+A luxury AI-powered fashion platform with an integrated AI stylist. Built as a graduation project.
 
-Status: Day 1 & Day 2 implemented (scaffold, DB, auth backend, frontend skeleton, email verification, toasts).
+## Tech Stack
 
-Key files:
-- [backend/src/routes/auth.ts](backend/src/routes/auth.ts) — JWT auth (register/login/refresh/logout), email verification (Nodemailer/Ethereal).
-- [frontend/src/pages/Login.tsx](frontend/src/pages/Login.tsx) — Login page calling backend and storing tokens.
-- [frontend/src/pages/Register.tsx](frontend/src/pages/Register.tsx) — Register page calling backend and showing verification notices.
-- [frontend/src/context/ToastContext.tsx](frontend/src/context/ToastContext.tsx) — simple global toast provider.
-- [database/prisma/schema.prisma](database/prisma/schema.prisma) — Prisma schema + seed script.
+### Frontend
+- React 18 + Vite
+- Tailwind CSS v4 (using `@import "tailwindcss"` + `@theme`)
+- React Router v6
+- Zustand for state management
+- TanStack React Query for server state
+- Axios with JWT interceptors
 
-Run locally (from workspace root):
+### Backend
+- Python 3.11+ / Django + Django REST Framework
+- Simple JWT for authentication
+- SQLite (development)
+- Anthropic Claude API for AI stylist
+- django-cors-headers
 
-1) Install dependencies:
+## Quick Start
+
+### 1. Backend Setup
 
 ```bash
+cd backend
+
+# Create & activate virtual environment
+python -m venv ../.venv
+# Windows:
+..\.venv\Scripts\activate
+# macOS/Linux:
+# source ../.venv/bin/activate
+
+# Install dependencies
+pip install django djangorestframework djangorestframework-simplejwt django-cors-headers anthropic pillow python-dotenv
+
+# Run migrations (creates SQLite database automatically)
+python manage.py migrate
+
+# Create admin user
+python manage.py createsuperuser
+# Username: admin
+# Email: admin@aura.com
+# Password: admin123
+
+# Seed product data (19 products with real Unsplash images)
+python manage.py seed_products
+
+# Start backend server
+python manage.py runserver 8000
+```
+
+### 2. Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
 npm install
+
+# Start development server
+npm run dev
+# → Runs on http://localhost:5173
 ```
 
-2) Setup DB (Prisma + seed):
+### 3. Environment Variables
 
-```bash
-npm --workspace=database run prisma:generate
-npm --workspace=database run prisma:push
-npm --workspace=database run seed
+**Backend** (`backend/.env`):
+```env
+SECRET_KEY=django-insecure-aura-dev-key-change-in-production-xyz123
+DEBUG=True
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-3) Start backend:
-
-```bash
-npm --workspace=backend run dev
+**Frontend** (`frontend/.env`):
+```env
+VITE_API_BASE_URL=http://localhost:8000/api
 ```
 
-4) Start frontend:
+## Project Structure
 
-```bash
-npm --workspace=frontend run dev
+```
+├── backend/
+│   ├── config/           # Django settings, root URLs
+│   ├── accounts/         # User auth (JWT login/register/profile)
+│   ├── products/         # Product & Category models, views, seed data
+│   ├── orders/           # Orders, Cart (server-side)
+│   ├── ai_chat/          # AI Stylist (Claude API integration)
+│   └── manage.py
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/          # Axios client with JWT interceptor
+│   │   ├── store/        # Zustand stores (auth, cart, toast)
+│   │   ├── components/
+│   │   │   ├── layout/   # Navbar, Footer
+│   │   │   ├── cart/     # CartDrawer
+│   │   │   └── ui/       # ProductCard, LoadingSpinner, ToastContainer
+│   │   ├── pages/        # All route pages
+│   │   ├── App.tsx       # Routes
+│   │   ├── main.tsx      # Entry point
+│   │   └── index.css     # Tailwind v4 + design system
+│   └── index.html
 ```
 
-Notes:
-- The register endpoint returns an Ethereal preview URL (dev) and a `verifyUrl` to complete verification during development.
-- I couldn't create a Jira board or push the repo to a remote without your credentials. I can do those if you provide the remote URL or a GitHub token.
+## Features
+
+- 🏠 **Home Page** — Full-screen hero, category browsing, new arrivals
+- 🛍️ **Shop** — Filterable product grid with search, sort, pagination
+- 📦 **Product Detail** — Size/color selectors, add to cart, related products
+- 🤖 **AI Stylist** — Chat with Claude AI, upload photos for style analysis
+- 🛒 **Cart** — Server-side cart with quantity management
+- 💳 **Checkout** — 3-step flow (Shipping → Payment → Confirmation)
+- 👤 **Profile** — Edit info, view order history
+- 🔐 **Auth** — JWT login/register with auto-refresh
+
+## Design System
+
+- **Background:** `#0a0a0a` (near-black)
+- **Accent:** `#c9a96e` (warm gold)
+- **Typography:** Cormorant Garamond (display) + DM Sans (body)
+- **Aesthetic:** Luxury dark editorial with smooth animations
+
+## Admin Access
+
+Visit `http://localhost:8000/admin/` and login with your superuser credentials to manage products, orders, and chat logs.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products/` | List products (filterable) |
+| GET | `/api/products/:id/` | Product detail |
+| GET | `/api/products/categories/` | List categories |
+| POST | `/api/auth/login/` | JWT login |
+| POST | `/api/auth/register/` | Register |
+| POST | `/api/auth/refresh/` | Refresh token |
+| GET/PATCH | `/api/auth/profile/` | User profile |
+| GET/POST | `/api/orders/cart/` | Cart operations |
+| GET/POST | `/api/orders/` | Orders |
+| POST | `/api/ai/chat/` | AI stylist chat |

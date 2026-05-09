@@ -1,77 +1,60 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext';
-import { CartProvider } from './context/CartContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+
+/* Layout */
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
-import CartDrawer from './components/layout/CartDrawer';
-import Home from './pages/Home';
-import Shop from './pages/Shop';
-import ProductDetail from './pages/ProductDetail';
-import AIAdvisor from './pages/AIAdvisor';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProducts from './pages/AdminProducts';
-import AdminOrders from './pages/AdminOrders';
-import AdminUsers from './pages/AdminUsers';
+import CartDrawer from './components/cart/CartDrawer';
+import ToastContainer from './components/ui/ToastContainer';
 
-function Protected({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" />;
-  return <>{children}</>;
-}
+/* Pages */
+import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import AIStylistPage from './pages/AIStylistPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 
-function AdminProtected({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" />;
-  if (user.role !== 'admin') return <Navigate to="/" />;
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <CartProvider>
-            <div className="min-h-screen bg-background text-foreground">
-              <Routes>
-                {/* Admin routes - no navbar/footer */}
-                <Route path="/admin" element={<AdminProtected><AdminDashboard /></AdminProtected>} />
-                <Route path="/admin/products" element={<AdminProtected><AdminProducts /></AdminProtected>} />
-                <Route path="/admin/orders" element={<AdminProtected><AdminOrders /></AdminProtected>} />
-                <Route path="/admin/users" element={<AdminProtected><AdminUsers /></AdminProtected>} />
-
-                {/* Public routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-
-                {/* Protected routes with navbar/footer */}
-                <Route path="/*" element={
-                  <>
-                    <Navbar />
-                    <CartDrawer />
-                    <main>
-                      <Routes>
-                        <Route path="/" element={<Protected><Home /></Protected>} />
-                        <Route path="/shop" element={<Protected><Shop /></Protected>} />
-                        <Route path="/product/:id" element={<Protected><ProductDetail /></Protected>} />
-                        <Route path="/ai-stylist" element={<Protected><AIAdvisor /></Protected>} />
-                        <Route path="/profile" element={<Protected><Profile /></Protected>} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                  </>
-                } />
-              </Routes>
-            </div>
-          </CartProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <>
+      <ToastContainer />
+      <CartDrawer />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/*" element={<MainLayout />} />
+      </Routes>
+    </>
   );
 }
 
+function MainLayout() {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
+      <Navbar />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/ai-stylist" element={<ProtectedRoute><AIStylistPage /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+}
