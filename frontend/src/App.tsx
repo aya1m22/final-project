@@ -19,7 +19,7 @@ export default function App() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-gold/30 selection:text-gold flex flex-col">
+    <div className="min-h-screen bg-bg text-text flex flex-col font-body selection:bg-gold-dim selection:text-gold">
       <Navbar />
       <CartDrawer />
       <ToastContainer />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import client from '../api/client';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
@@ -22,7 +22,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
-  const [activeTab, setActiveTab] = useState<string | null>('description');
+  const [activeTab, setActiveTab] = useState<string | null>('details');
   const [activeThumb, setActiveThumb] = useState(0);
 
   const addToCart = useCartStore(s => s.addToCart);
@@ -36,7 +36,7 @@ export default function ProductDetailPage() {
       setProduct(r.data);
       setSelectedSize(r.data.sizes?.[0] || '');
       setSelectedColor(r.data.colors?.[0] || '');
-      return client.get('/products/', { params: { category: r.data.category_name?.toLowerCase() } });
+      return client.get('/products/', { params: { category: r.data.category_name?.toLowerCase(), page_size: 4 } });
     }).then(r => {
       setRelated((r.data.results || r.data).filter((p: any) => p.id !== Number(id)).slice(0, 4));
     }).catch(() => {}).finally(() => setLoading(false));
@@ -47,100 +47,93 @@ export default function ProductDetailPage() {
     if (!product) return;
     try {
       await addToCart(product.id, 1, selectedSize, selectedColor);
-      addToast('Added to bag!', 'success');
-    } catch { addToast('Please sign in first', 'error'); }
+      addToast('Piece added to bag', 'success');
+    } catch { addToast('Authentication required', 'error'); }
   };
 
-  if (loading) return <div className="pt-40 flex justify-center"><div className="w-8 h-8 rounded-full border-2 border-border border-t-gold animate-spin" /></div>;
-  if (!product) return <div className="pt-40 text-center text-text-3 font-display italic text-2xl">Piece not found.</div>;
+  if (loading) return <div className="pt-40 flex justify-center"><div className="w-12 h-12 border-2 border-gold border-t-transparent rounded-full animate-spin" /></div>;
+  if (!product) return <div className="pt-40 text-center font-display italic text-3xl opacity-40">Piece not found.</div>;
 
   return (
     <PageTransition>
-      <div className="pt-24 pb-32">
-        {/* Breadcrumb */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <nav className="flex gap-3 text-[10px] tracking-[0.2em] text-text-3 uppercase">
-            <Link to="/" className="hover:text-gold transition-colors">Home</Link>
-            <span>/</span>
-            <Link to="/products" className="hover:text-gold transition-colors">Shop</Link>
-            <span>/</span>
-            <span className="text-text-2">{product.name}</span>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <div className="pt-32 pb-40">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
             
             {/* MISSING 8: Product Gallery */}
-            <div className="lg:col-span-7 flex flex-col md:flex-row gap-4">
-              <div className="flex md:flex-col gap-3 order-2 md:order-1">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="aspect-[3/4] rounded-sm overflow-hidden bg-bg-2 border border-border relative">
+                <AnimatePresence mode="wait">
+                  <motion.img 
+                    key={activeThumb}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    src={product.image_url} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover" 
+                    style={{ objectPosition: activeThumb === 1 ? 'top' : activeThumb === 2 ? 'bottom' : 'center' }}
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-black/5" />
+              </div>
+              <div className="flex gap-4">
                 {[product.image_url, product.image_url, product.image_url].map((img, i) => (
                   <button 
                     key={i} 
                     onClick={() => setActiveThumb(i)}
-                    className={`w-20 h-24 rounded-sm overflow-hidden border transition-all ${activeThumb === i ? 'border-gold' : 'border-border opacity-60'}`}
+                    className={`w-28 h-36 rounded-sm overflow-hidden border-2 transition-all duration-500 ${activeThumb === i ? 'border-gold' : 'border-transparent opacity-40 hover:opacity-100'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" style={{ objectPosition: i === 1 ? 'top' : i === 2 ? 'bottom' : 'center' }} />
                   </button>
                 ))}
               </div>
-              <div className="flex-1 aspect-[3/4] rounded-sm overflow-hidden bg-bg-2 order-1 md:order-2">
-                <motion.img 
-                  key={activeThumb}
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  src={product.image_url} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover" 
-                  style={{ objectPosition: activeThumb === 1 ? 'top' : activeThumb === 2 ? 'bottom' : 'center' }}
-                />
-              </div>
             </div>
 
             {/* Product Details */}
-            <div className="lg:col-span-5 py-2">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-gold tracking-[0.4em] uppercase text-[10px] mb-2 font-bold">{product.category_name}</p>
-                  <h1 className="font-display text-4xl text-text font-light italic leading-tight">{product.name}</h1>
+            <div className="lg:col-span-5 py-4">
+              <div className="flex justify-between items-start mb-8">
+                <div className="space-y-4">
+                  <p className="text-gold tracking-[0.6em] uppercase text-[10px] font-bold italic">{product.category_name}</p>
+                  <h1 className="font-display text-6xl text-text font-light italic leading-[0.9] tracking-tight">{product.name}</h1>
                 </div>
                 <button 
-                  onClick={() => toggle(product.id)}
-                  className={`w-10 h-10 rounded-full border border-border flex items-center justify-center transition-all ${isWishlisted ? 'bg-gold border-gold text-bg' : 'text-text-3 hover:text-gold hover:border-gold'}`}
+                  onClick={() => { toggle(product.id); addToast(isWishlisted ? 'Removed' : 'Saved', 'info'); }}
+                  className={`w-14 h-14 rounded-full border border-border flex items-center justify-center transition-all duration-500 hover:scale-110 shadow-2xl ${isWishlisted ? 'bg-gold border-gold text-bg' : 'text-text-3 hover:text-gold hover:border-gold/30'}`}
                 >
-                  <svg className={`w-5 h-5 ${isWishlisted ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className={`w-6 h-6 ${isWishlisted ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                   </svg>
                 </button>
               </div>
 
-              {/* Price */}
-              <div className="flex items-center gap-4 mb-8">
-                <span className="font-display text-3xl text-gold">${parseFloat(product.price).toFixed(2)}</span>
+              <div className="flex items-center gap-6 mb-12">
+                <span className="font-display text-4xl text-gold font-bold">${parseFloat(product.price).toFixed(2)}</span>
                 {product.original_price && (
-                  <span className="text-text-3 line-through text-lg opacity-60">${parseFloat(product.original_price).toFixed(2)}</span>
+                  <span className="text-text-3 line-through text-xl opacity-30 italic">${parseFloat(product.original_price).toFixed(2)}</span>
                 )}
                 {product.is_on_sale && (
-                  <span className="bg-red text-white text-[9px] px-2 py-1 tracking-widest font-bold rounded-xs">SALE</span>
+                  <span className="bg-red text-white text-[9px] px-3 py-1 tracking-[0.4em] font-black uppercase shadow-xl">Exclusive Sale</span>
                 )}
               </div>
 
-              <div className="h-px bg-border mb-8" />
+              <div className="h-px bg-white/5 mb-12" />
 
-              {/* Options */}
-              <div className="space-y-8 mb-10">
+              <div className="space-y-12 mb-16">
+                {/* Size Selection */}
                 {product.sizes.length > 0 && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <label className="text-[10px] tracking-[0.2em] text-text uppercase font-bold">Select Size</label>
-                      <button className="text-[9px] tracking-[0.1em] text-text-3 border-b border-border pb-0.5 hover:text-gold transition-colors">SIZE GUIDE</button>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center uppercase tracking-widest text-[10px] font-bold">
+                      <label className="text-text">Select Silhouette</label>
+                      <button className="text-gold/60 border-b border-gold/20 pb-1">Size Guide</button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-4">
                       {product.sizes.map(s => (
                         <button 
                           key={s} 
                           onClick={() => setSelectedSize(s)} 
-                          className={`w-12 h-12 text-xs tracking-widest transition-all rounded-sm border ${selectedSize === s ? 'bg-gold border-gold text-bg font-bold' : 'border-border text-text-3 hover:border-gold/50'}`}
+                          className={`w-14 h-14 text-xs tracking-widest transition-all duration-500 rounded-sm border ${selectedSize === s ? 'bg-gold border-gold text-bg font-black scale-105' : 'border-border text-text-3 hover:border-gold/30'}`}
                         >
                           {s}
                         </button>
@@ -149,17 +142,18 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
+                {/* Color Selection */}
                 {product.colors.length > 0 && (
-                  <div>
-                    <label className="text-[10px] tracking-[0.2em] text-text uppercase font-bold mb-4 block">Color: <span className="text-text-2 font-normal ml-1">{selectedColor}</span></label>
-                    <div className="flex flex-wrap gap-3">
+                  <div className="space-y-6">
+                    <label className="text-[10px] tracking-[0.4em] text-text uppercase font-bold">Aesthetic: <span className="text-gold italic ml-2">{selectedColor}</span></label>
+                    <div className="flex flex-wrap gap-5">
                       {product.colors.map(c => (
                         <button 
                           key={c} 
                           onClick={() => setSelectedColor(c)} 
-                          className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 ${selectedColor === c ? 'border-gold' : 'border-transparent'}`}
+                          className={`w-10 h-10 rounded-full border-2 transition-all duration-500 p-1 flex items-center justify-center ${selectedColor === c ? 'border-gold' : 'border-transparent'}`}
                         >
-                          <div className="w-full h-full rounded-full border border-black/10" style={{ background: c.toLowerCase() === 'white' ? '#fff' : c.toLowerCase() === 'black' ? '#000' : c }} />
+                          <div className="w-full h-full rounded-full border border-white/10" style={{ background: c.toLowerCase() === 'white' ? '#fff' : c.toLowerCase() === 'black' ? '#000' : c }} />
                         </button>
                       ))}
                     </div>
@@ -167,39 +161,37 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-4 mb-10">
+              <div className="space-y-6 mb-16">
                 <button 
                   onClick={handleAdd} 
-                  className="w-full py-5 text-[11px] tracking-[0.3em] font-bold bg-gold text-bg rounded-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-gold/10"
+                  className="w-full py-6 text-[11px] tracking-[0.5em] font-black bg-gold text-bg transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-3xl shadow-gold/20 uppercase"
                 >
-                  ADD TO SHOPPING BAG
+                  Acquire Piece
                 </button>
 
-                {/* BUG 3 FIX: Ask AI Button */}
+                {/* BUG 3: AI Button */}
                 <Link
                   to={`/ai-stylist?product=${product.id}&name=${encodeURIComponent(product.name)}`}
-                  className="w-full flex items-center justify-center gap-3 py-4 text-[10px] tracking-[0.2em] rounded-sm border border-border text-text-2 hover:border-gold/50 hover:text-gold transition-all"
+                  className="w-full flex items-center justify-center gap-4 py-5 text-[10px] tracking-[0.4em] glass border border-gold/20 text-gold transition-all duration-500 hover:border-gold hover:bg-gold/5 uppercase font-black"
                 >
-                  <span className="text-gold text-sm">✦</span>
-                  ASK AURA IF THIS SUITS YOU
+                  <span className="text-lg">✦</span>
+                  Consult AURA Stylist
                 </Link>
               </div>
 
-              {/* Details Accordion */}
-              <div className="border-t border-border">
+              <div className="border-t border-white/5">
                 {[
-                  { key: 'description', label: 'THE DESCRIPTION', content: product.description },
-                  { key: 'shipping', label: 'SHIPPING & RETURNS', content: 'Enjoy complimentary express shipping on all orders over $49. Returns are accepted within 30 days of delivery in original condition.' },
-                  { key: 'details', label: 'PRODUCT DETAILS', content: `Composition: 100% Premium Material. Item ID: ${product.id}. Made in Italy.` },
+                  { key: 'details', label: 'Artistry & Origin', content: product.description },
+                  { key: 'shipping', label: 'Delivery & Return', content: 'Complimentary premium shipping on orders exceeding $49. 30-day effortless returns in original condition.' },
+                  { key: 'composition', label: 'Bespoke Details', content: `Mastercrafted Item ID: ${product.id}. Composition: 100% Sourced Italian Material.` },
                 ].map(tab => (
-                  <div key={tab.key} className="border-b border-border">
+                  <div key={tab.key} className="border-b border-white/5">
                     <button 
                       onClick={() => setActiveTab(activeTab === tab.key ? null : tab.key)} 
-                      className="w-full flex justify-between items-center py-5 text-[10px] tracking-[0.2em] font-bold text-text hover:text-gold transition-colors"
+                      className="w-full flex justify-between items-center py-6 text-[10px] tracking-[0.4em] font-black text-text hover:text-gold transition-all uppercase"
                     >
                       <span>{tab.label}</span>
-                      <span className="text-lg font-light">{activeTab === tab.key ? '−' : '+'}</span>
+                      <span className="text-xl font-light">{activeTab === tab.key ? '−' : '+'}</span>
                     </button>
                     <AnimatePresence>
                       {activeTab === tab.key && (
@@ -209,7 +201,7 @@ export default function ProductDetailPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <p className="text-sm text-text-3 pb-6 leading-relaxed italic">{tab.content}</p>
+                          <p className="text-sm text-text-3 pb-8 leading-relaxed italic font-light tracking-wide">{tab.content}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -219,11 +211,14 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Related Section */}
+          {/* Related Selections */}
           {related.length > 0 && (
-            <div className="mt-32 pt-20 border-t border-border">
-              <h2 className="font-display text-4xl text-text font-light italic mb-12">You May Also Admire</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="mt-40 pt-40 border-t border-white/5">
+              <div className="flex flex-col items-center text-center mb-24">
+                 <p className="text-gold tracking-[0.5em] uppercase text-[10px] mb-6 font-bold">Curated Complement</p>
+                 <h2 className="font-display text-6xl text-text font-light italic">You May Also Admire</h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                 {related.map(p => <ProductCard key={p.id} {...p} />)}
               </div>
             </div>

@@ -39,11 +39,6 @@ class ProductListView(generics.ListAPIView):
         new_arrivals = self.request.query_params.get('new_arrivals')
         if new_arrivals == 'true':
             queryset = queryset.filter(is_new_arrival=True)
-            
-        # Featured Filter
-        featured = self.request.query_params.get('featured')
-        if featured == 'true':
-            queryset = queryset.filter(is_featured=True)
 
         return queryset
 
@@ -56,10 +51,3 @@ class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
-
-class FeaturedProductsView(generics.ListAPIView):
-    serializer_class = ProductListSerializer
-    permission_classes = [AllowAny]
-    
-    def get_queryset(self):
-        return Product.objects.filter(is_featured=True)[:4]
