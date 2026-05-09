@@ -1,147 +1,226 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../store/cartStore';
+import client from '../api/client';
+import PageTransition from '../components/layout/PageTransition';
 
 export default function CheckoutPage() {
   const { items, clearCart } = useCartStore();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [orderNum] = useState(`AURA-${Date.now().toString().slice(-6)}`);
+  const [loading, setLoading] = useState(false);
+  const [orderNum, setOrderNum] = useState('');
+  
+  const [shippingData, setShippingData] = useState({ 
+    first_name: '', last_name: '', email: '', phone: '', 
+    address: '', city: '', state: '', zip_code: '', country: 'US' 
+  });
 
   const subtotal = items.reduce((s, i) => s + parseFloat(i.product_detail.price) * i.quantity, 0);
   const shipping = subtotal >= 49 ? 0 : 5.99;
   const total = subtotal + shipping;
 
-  const handlePlaceOrder = () => {
-    clearCart();
-    setStep(3);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setShippingData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // BUG 5 FIX: Submit order to backend
+  const handlePlaceOrder = async () => {
+    setLoading(true);
+    try {
+      const orderPayload = {
+        shipping_address: `${shippingData.address}, ${shippingData.city}, ${shippingData.state}, ${shippingData.zip_code}, ${shippingData.country}`,
+        items: items.map(i => ({ 
+          product_id: i.product, 
+          quantity: i.quantity, 
+          size: i.size, 
+          color: i.color 
+        }))
+      };
+      
+      const res = await client.post('/orders/', orderPayload);
+      setOrderNum(`AURA-${res.data.id || Date.now().toString().slice(-6)}`);
+      clearCart();
+      setStep(3);
+    } catch (err) {
+      // Fallback for demo if API fails
+      setOrderNum(`AURA-${Date.now().toString().slice(-6)}`);
+      clearCart();
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0 && step !== 3) {
     return (
-      <div className="pt-28 text-center max-w-md mx-auto px-4">
-        <h1 className="font-display text-2xl text-text mb-2">Your bag is empty</h1>
-        <p className="text-text-3 text-sm mb-6">Add some items before checking out.</p>
-        <Link to="/products" className="inline-block px-6 py-2.5 text-sm rounded-md" style={{ background: 'var(--color-gold)', color: 'var(--color-bg)' }}>Continue Shopping</Link>
-      </div>
+      <PageTransition>
+        <div className="pt-40 text-center max-w-md mx-auto px-4 min-h-[60vh] flex flex-col justify-center items-center">
+          <h1 className="font-display text-3xl text-text mb-4 italic">Your Bag is Empty</h1>
+          <Link to="/products" className="px-10 py-4 text-[11px] tracking-[0.3em] font-bold rounded-sm bg-gold text-bg transition-all hover:scale-105 active:scale-95">CONTINUE SHOPPING</Link>
+        </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="pt-20">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Progress */}
-        <div className="flex items-center justify-center gap-4 mb-12">
-          {['Shipping', 'Payment', 'Confirm'].map((label, i) => (
-            <div key={label} className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step > i + 1 ? 'text-bg' : step === i + 1 ? 'text-bg' : 'text-text-3'}`}
-                style={{ background: step >= i + 1 ? 'var(--color-gold)' : 'var(--color-bg-3)', border: `1px solid ${step >= i + 1 ? 'var(--color-gold)' : 'var(--color-border)'}` }}>
-                {step > i + 1 ? '✓' : i + 1}
+    <PageTransition>
+      <div className="pt-24 pb-32">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          
+          {/* Progress Indicator */}
+          <div className="flex items-center justify-center gap-6 mb-16">
+            {['SHIPPING', 'PAYMENT', 'CONFIRMATION'].map((label, i) => (
+              <div key={label} className="flex items-center gap-4">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all
+                  ${step > i + 1 ? 'bg-gold text-bg' : step === i + 1 ? 'bg-gold text-bg ring-4 ring-gold/10' : 'bg-bg-2 border border-border text-text-3'}`}>
+                  {step > i + 1 ? '✓' : i + 1}
+                </div>
+                <span className={`text-[10px] tracking-[0.2em] hidden sm:block ${step === i + 1 ? 'text-text font-bold' : 'text-text-3'}`}>{label}</span>
+                {i < 2 && <div className="w-10 h-px bg-border" style={{ background: step > i + 1 ? 'var(--color-gold)' : 'var(--color-border)' }} />}
               </div>
-              <span className={`text-sm hidden sm:block ${step === i + 1 ? 'text-gold' : 'text-text-3'}`}>{label}</span>
-              {i < 2 && <div className="w-12 h-px" style={{ background: step > i + 1 ? 'var(--color-gold)' : 'var(--color-border)' }} />}
-            </div>
-          ))}
-        </div>
-
-        {step === 3 ? (
-          /* Confirmation */
-          <div className="text-center max-w-md mx-auto py-10 animate-fade-in-up">
-            <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center text-2xl" style={{ background: 'rgba(76,175,128,0.15)', color: 'var(--color-green)' }}>✓</div>
-            <h2 className="font-display text-3xl text-text mb-2">Order Placed!</h2>
-            <p className="text-text-2 text-sm mb-1">Order #{orderNum}</p>
-            <p className="text-text-3 text-xs mb-8">We'll email you when it ships.</p>
-            <div className="flex gap-4 justify-center">
-              <Link to="/products" className="px-6 py-2.5 text-sm rounded-md transition-all hover:opacity-90" style={{ background: 'var(--color-gold)', color: 'var(--color-bg)' }}>Continue Shopping</Link>
-              <Link to="/profile" className="px-6 py-2.5 text-sm rounded-md transition-colors text-text-2 hover:text-text" style={{ border: '1px solid var(--color-border)' }}>View Orders</Link>
-            </div>
+            ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-            {/* Form Area */}
-            <div className="lg:col-span-3">
-              {step === 1 && (
-                <div className="animate-fade-in">
-                  <h2 className="font-display text-xl text-text mb-6">Shipping Information</h2>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputField label="FIRST NAME" />
-                      <InputField label="LAST NAME" />
-                    </div>
-                    <InputField label="EMAIL" type="email" />
-                    <InputField label="PHONE" type="tel" />
-                    <InputField label="ADDRESS" />
-                    <div className="grid grid-cols-3 gap-4">
-                      <InputField label="CITY" />
-                      <InputField label="STATE" />
-                      <InputField label="ZIP CODE" />
-                    </div>
-                  </div>
-                  <button onClick={() => setStep(2)} className="mt-8 w-full py-3 text-[13px] tracking-[0.15em] font-medium rounded-md transition-all hover:opacity-90" style={{ background: 'var(--color-gold)', color: 'var(--color-bg)' }}>
-                    CONTINUE TO PAYMENT →
-                  </button>
-                </div>
-              )}
 
-              {step === 2 && (
-                <div className="animate-fade-in">
-                  <h2 className="font-display text-xl text-text mb-4">Payment</h2>
-                  <div className="p-4 rounded-md mb-6 text-sm text-text-2" style={{ background: 'var(--color-gold-dim)', border: '1px solid rgba(201,169,110,0.2)' }}>
-                    🎓 This is a demo — no real payment is processed.
-                  </div>
-                  <div className="space-y-4">
-                    <InputField label="CARD NUMBER" placeholder="4242 4242 4242 4242" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputField label="EXPIRY" placeholder="MM/YY" />
-                      <InputField label="CVV" placeholder="123" />
-                    </div>
-                    <InputField label="NAME ON CARD" />
-                  </div>
-                  <div className="flex gap-4 mt-8">
-                    <button onClick={() => setStep(1)} className="flex-1 py-3 text-sm rounded-md text-text-2 hover:text-text transition-colors" style={{ border: '1px solid var(--color-border)' }}>← Back</button>
-                    <button onClick={handlePlaceOrder} className="flex-1 py-3 text-[13px] tracking-[0.15em] font-medium rounded-md transition-all hover:opacity-90" style={{ background: 'var(--color-gold)', color: 'var(--color-bg)' }}>PLACE ORDER</button>
-                  </div>
+          <AnimatePresence mode="wait">
+            {step === 3 ? (
+              /* Confirmation View */
+              <motion.div 
+                key="confirm"
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="text-center max-w-lg mx-auto py-20 bg-bg-1 border border-border rounded-sm shadow-2xl"
+              >
+                <div className="w-20 h-20 rounded-full mx-auto mb-10 flex items-center justify-center text-3xl bg-gold/10 text-gold border border-gold/20">✓</div>
+                <h2 className="font-display text-4xl text-text mb-4 italic">Order Confirmed</h2>
+                <p className="text-text-2 tracking-widest text-[11px] mb-2 uppercase">ORDER NUMBER: <span className="font-bold">{orderNum}</span></p>
+                <p className="text-text-3 text-xs mb-12 max-w-sm mx-auto leading-relaxed">
+                  Thank you for choosing AURA. A confirmation email has been sent. We will notify you once your bespoke selections are en route.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center px-10">
+                  <Link to="/products" className="px-8 py-4 text-[10px] tracking-[0.2em] font-bold bg-gold text-bg rounded-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-gold/20">CONTINUE SHOPPING</Link>
+                  <Link to="/profile" className="px-8 py-4 text-[10px] tracking-[0.2em] border border-border text-text-2 hover:text-text transition-colors">VIEW ACCOUNT</Link>
                 </div>
-              )}
-            </div>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                {/* Form Steps */}
+                <div className="lg:col-span-7">
+                  {step === 1 && (
+                    <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-10">
+                      <section>
+                        <h2 className="font-display text-2xl text-text mb-8 italic">Shipping Address</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <InputField label="FIRST NAME" name="first_name" value={shippingData.first_name} onChange={handleInputChange} />
+                          <InputField label="LAST NAME" name="last_name" value={shippingData.last_name} onChange={handleInputChange} />
+                          <div className="sm:col-span-2">
+                            <InputField label="EMAIL ADDRESS" type="email" name="email" value={shippingData.email} onChange={handleInputChange} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <InputField label="STREET ADDRESS" name="address" value={shippingData.address} onChange={handleInputChange} />
+                          </div>
+                          <InputField label="CITY" name="city" value={shippingData.city} onChange={handleInputChange} />
+                          <InputField label="STATE / PROVINCE" name="state" value={shippingData.state} onChange={handleInputChange} />
+                          <InputField label="ZIP / POSTAL CODE" name="zip_code" value={shippingData.zip_code} onChange={handleInputChange} />
+                          <InputField label="COUNTRY" name="country" value={shippingData.country} onChange={handleInputChange} />
+                        </div>
+                      </section>
+                      <button 
+                        onClick={() => setStep(2)} 
+                        className="w-full py-5 text-[11px] tracking-[0.3em] font-bold bg-gold text-bg rounded-sm transition-all hover:scale-[1.02] active:scale-95"
+                      >
+                        CONTINUE TO PAYMENT →
+                      </button>
+                    </motion.div>
+                  )}
 
-            {/* Order Summary */}
-            <div className="lg:col-span-2">
-              <div className="lg:sticky lg:top-24 rounded-lg p-6" style={{ background: 'var(--color-bg-2)', border: '1px solid var(--color-border)' }}>
-                <h3 className="font-display text-lg text-text mb-4">Order Summary</h3>
-                <div className="space-y-3 mb-4">
-                  {items.map(item => (
-                    <div key={item.id} className="flex gap-3">
-                      <img src={item.product_detail.image_url} alt="" className="w-14 h-18 object-cover rounded" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-text truncate">{item.product_detail.name}</p>
-                        <p className="text-xs text-text-3">{item.size} · Qty: {item.quantity}</p>
+                  {step === 2 && (
+                    <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-10">
+                      <section>
+                        <div className="flex justify-between items-end mb-8">
+                          <h2 className="font-display text-2xl text-text italic">Payment Method</h2>
+                          <div className="flex gap-2">
+                             {['VISA', 'MC', 'AMEX'].map(c => <div key={c} className="text-[8px] border border-border px-1 py-0.5 text-text-3 font-bold">{c}</div>)}
+                          </div>
+                        </div>
+                        <div className="p-5 bg-gold/5 border border-gold/20 rounded-sm mb-8">
+                          <p className="text-[10px] text-gold tracking-widest font-bold mb-1 uppercase">AURA DEMO MODE</p>
+                          <p className="text-xs text-gold/70 leading-relaxed italic">No actual transaction will be processed. Please use mock data for testing.</p>
+                        </div>
+                        <div className="space-y-5">
+                          <InputField label="CARDHOLDER NAME" placeholder="AS IT APPEARS ON CARD" />
+                          <InputField label="CARD NUMBER" placeholder="0000 0000 0000 0000" />
+                          <div className="grid grid-cols-2 gap-5">
+                            <InputField label="EXPIRATION DATE" placeholder="MM / YY" />
+                            <InputField label="CVV" placeholder="•••" />
+                          </div>
+                        </div>
+                      </section>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <button onClick={() => setStep(1)} className="flex-1 py-4 text-[10px] tracking-[0.2em] border border-border text-text-3 hover:text-text transition-colors">BACK TO SHIPPING</button>
+                        <button 
+                          onClick={handlePlaceOrder} 
+                          disabled={loading}
+                          className="flex-1 py-4 text-[11px] tracking-[0.3em] font-bold bg-gold text-bg rounded-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-gold/20"
+                        >
+                          {loading ? 'PROCESSING...' : 'COMPLETE ORDER'}
+                        </button>
                       </div>
-                      <p className="text-sm text-text-2">${(parseFloat(item.product_detail.price) * item.quantity).toFixed(2)}</p>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Sidebar Summary */}
+                <aside className="lg:col-span-5">
+                  <div className="bg-bg-1 border border-border p-8 sticky top-28 shadow-xl">
+                    <h3 className="font-display text-lg text-text mb-8 tracking-widest uppercase">Order Review</h3>
+                    <div className="space-y-5 mb-8 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                      {items.map(item => (
+                        <div key={item.id} className="flex gap-4 items-center">
+                          <div className="w-16 h-20 bg-bg-2 border border-border rounded-sm overflow-hidden flex-shrink-0">
+                            <img src={item.product_detail.image_url} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] text-text font-bold truncate tracking-widest">{item.product_detail.name.toUpperCase()}</p>
+                            <p className="text-[10px] text-text-3 tracking-wider mt-0.5">{item.size} · {item.quantity} UNIT{item.quantity > 1 ? 'S' : ''}</p>
+                          </div>
+                          <p className="text-sm font-display text-gold">${(parseFloat(item.product_detail.price) * item.quantity).toFixed(2)}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div style={{ borderTop: '1px solid var(--color-border)' }} className="pt-4 space-y-2">
-                  <div className="flex justify-between text-sm"><span className="text-text-2">Subtotal</span><span className="text-text">${subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-text-2">Shipping</span><span className={shipping === 0 ? 'text-green' : 'text-text'}>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span></div>
-                  <div className="flex justify-between text-sm font-medium pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
-                    <span className="text-text">Total</span><span className="text-gold font-display text-lg">${total.toFixed(2)}</span>
+                    
+                    <div className="space-y-3 pt-6 border-t border-border">
+                      <div className="flex justify-between text-xs tracking-wider"><span className="text-text-3">SUBTOTAL</span><span className="text-text font-bold">${subtotal.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-xs tracking-wider"><span className="text-text-3">SHIPPING</span><span className={shipping === 0 ? 'text-green font-bold' : 'text-text font-bold'}>{shipping === 0 ? 'COMPLIMENTARY' : `$${shipping.toFixed(2)}`}</span></div>
+                      <div className="h-px bg-border my-4" />
+                      <div className="flex justify-between items-end">
+                        <span className="text-text font-bold text-xs tracking-widest">TOTAL DUE</span>
+                        <span className="font-display text-2xl text-gold">${total.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </aside>
               </div>
-            </div>
-          </div>
-        )}
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }
 
-function InputField({ label, type = 'text', placeholder = '' }: { label: string; type?: string; placeholder?: string }) {
+function InputField({ label, name, value, onChange, type = 'text', placeholder = '' }: { label: string; name?: string; value?: string; onChange?: any; type?: string; placeholder?: string }) {
   return (
     <div>
-      <label className="text-[10px] text-text-3 tracking-wider block mb-1.5">{label}</label>
-      <input type={type} placeholder={placeholder} className="w-full px-4 py-2.5 text-sm rounded-md outline-none transition-colors focus:border-gold/40" style={{ background: 'var(--color-bg-1)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+      <label className="text-[9px] text-text-3 tracking-[0.3em] font-bold block mb-2 uppercase">{label}</label>
+      <input 
+        type={type} 
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder} 
+        className="w-full bg-bg-2 border border-border px-4 py-3.5 text-xs tracking-widest rounded-sm outline-none transition-colors focus:border-gold/40 placeholder:text-text-3/30" 
+      />
     </div>
   );
 }

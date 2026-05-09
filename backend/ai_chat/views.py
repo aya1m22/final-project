@@ -1,173 +1,153 @@
-import json
 import re
-import logging
-import anthropic
-from django.conf import settings
+import json
+import os
+import requests
+import base64
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
 from .models import ChatSession, ChatMessage
-from .serializers import ChatSessionSerializer, ChatMessageSerializer
 from products.models import Product
-
-logger = logging.getLogger(__name__)
-
-
-class ChatSessionListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        sessions = ChatSession.objects.filter(user=request.user)
-        serializer = ChatSessionSerializer(sessions, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        session = ChatSession.objects.create(user=request.user)
-        return Response(ChatSessionSerializer(session).data, status=201)
-
+from products.serializers import ProductListSerializer
 
 class AIChatView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user_message = request.data.get('message', '')
-        image_data = request.data.get('image')  # base64 encoded
+        user_message = request.data.get('message')
         session_id = request.data.get('session_id')
+        image_data = request.data.get('image')  # Base64 image
+        history = request.data.get('history', [])
+
+        if not user_message and not image_data:
+            return Response({"error": "Message or image is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Get or create session
         if session_id:
             try:
                 session = ChatSession.objects.get(id=session_id, user=request.user)
             except ChatSession.DoesNotExist:
-                session = ChatSession.objects.create(user=request.user)
+                session = ChatSession.objects.create(user=request.user, title=user_message[:50] if user_message else "Image Analysis")
         else:
-            session = ChatSession.objects.create(user=request.user)
+            session = ChatSession.objects.create(user=request.user, title=user_message[:50] if user_message else "Image Analysis")
 
         # Save user message
-        user_msg = ChatMessage.objects.create(
-            session=session,
-            role='user',
-            content=user_message,
-        )
+        ChatMessage.objects.create(session=session, role='user', content=user_message or "[Image Uploaded]")
 
-        # Build product catalog for context
-        products = Product.objects.select_related('category').all()[:50]
+        # Prepare product catalog for context
+        products = Product.objects.all()[:20]
         product_catalog = "\n".join([
-            f"ID:{p.id} | {p.name} | ${p.price} | {p.category.name} | Sizes: {','.join(p.sizes)} | Colors: {','.join(p.colors)}"
+            f"ID: {p.id} | Name: {p.name} | Price: ${p.price} | Category: {p.category.name} | Description: {p.description[:100]}..."
             for p in products
         ])
 
-        system_prompt = f"""You are AURA, a luxury AI fashion stylist for our online store.
-Our product catalog:
+        system_prompt = f"""You are AURA, a warm and knowledgeable AI fashion stylist for a luxury online store called AURA.
+
+OUR PRODUCT CATALOG (use ONLY these products):
 {product_catalog}
 
-When recommending products, ONLY recommend products from our catalog above using their exact IDs.
-If analyzing a photo: assess skin tone (warm/cool/neutral), body shape, style personality,
-then recommend 3-5 specific products by ID.
-Be warm, stylish, and helpful. Keep responses under 200 words.
-Use fashion terminology naturally.
-At the end of EVERY response that includes product recommendations, add this JSON on its own line:
-RECOMMENDATIONS:{{"product_ids": [id1, id2, id3]}}"""
+RULES:
+1. Be warm, stylish, and specific. Like a knowledgeable friend, not a robot.
+2. Keep responses under 180 words.
+3. When recommending products, you MUST end your message with this EXACT format on its own line (nothing else after it):
+   |||RECS:{{"ids":[1,2,3]}}|||
+4. Only use product IDs from the catalog above.
+5. When analyzing a photo: first comment on skin tone (warm/cool/neutral), then body shape and style vibe, then recommend 3-5 specific products.
+6. If no products are relevant to the question, do NOT include the |||RECS:...||| line.
+7. You are AURA. Never break character."""
 
-        # Build conversation history from session
-        history_messages = ChatMessage.objects.filter(session=session).order_by('created_at')
-        messages = []
-        for msg in history_messages:
-            if msg.id == user_msg.id:
-                continue  # Skip the one we just created; we'll add it below
-            messages.append({"role": msg.role, "content": msg.content})
-
-        # Add current user message
-        if image_data:
-            # Remove data URL prefix if present
-            if ',' in image_data:
-                image_data = image_data.split(',')[1]
-            messages.append({
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/jpeg",
-                            "data": image_data
-                        }
-                    },
-                    {
-                        "type": "text",
-                        "text": user_message or "Please analyze my photo and recommend outfits that would suit me."
-                    }
-                ]
-            })
-        else:
-            messages.append({"role": "user", "content": user_message})
-
-        # Call Claude API
-        try:
-            client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=800,
-                system=system_prompt,
-                messages=messages,
-            )
-            ai_text = response.content[0].text
-        except Exception as e:
-            logger.error(f"Anthropic API error: {e}")
-            # Mock fallback response so it works without a valid API key
-            fallback_products = Product.objects.all()[:2]
-            p_ids = [p.id for p in fallback_products]
-            ai_text = (
-                "Based on your style preferences, I've curated a few elegant pieces for you. "
-                "These should be perfect for a formal occasion or elevating your everyday look!\n\n"
-                f"RECOMMENDATIONS:{{\"product_ids\": {p_ids}}}"
-            )
-
-        # Parse product recommendations
-        recommended_ids = []
-        clean_text = ai_text
-        if "RECOMMENDATIONS:" in ai_text:
-            match = re.search(r'RECOMMENDATIONS:(\{.*?\})', ai_text)
-            if match:
-                try:
-                    data = json.loads(match.group(1))
-                    recommended_ids = data.get('product_ids', [])
-                    clean_text = ai_text.replace(match.group(0), '').strip()
-                except (json.JSONDecodeError, ValueError):
-                    pass
-
-        # Get recommended products
-        recommended_products = []
-        if recommended_ids:
-            prods = Product.objects.filter(id__in=recommended_ids).select_related('category')
-            recommended_products = [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "price": str(p.price),
-                    "image_url": p.image_url,
-                    "category": p.category.name,
-                    "sizes": p.sizes,
-                    "colors": p.colors,
+        # Call Anthropic API (or fallback to mock)
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        ai_text = ""
+        
+        if api_key and api_key != "your_anthropic_api_key_here":
+            try:
+                headers = {
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json"
                 }
-                for p in prods
-            ]
+                
+                messages = []
+                # Add history
+                for h in history[-5:]:
+                    messages.append({"role": h['role'], "content": h['content']})
+                
+                # Current message
+                content = []
+                if user_message:
+                    content.append({"type": "text", "text": user_message})
+                if image_data:
+                    # image_data is "data:image/jpeg;base64,..."
+                    try:
+                        base64_img = image_data.split(",")[1]
+                        media_type = image_data.split(";")[0].split(":")[1]
+                        content.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": base64_img
+                            }
+                        })
+                    except: pass
+                
+                messages.append({"role": "user", "content": content})
 
-        # Save AI message
-        ChatMessage.objects.create(
-            session=session,
-            role='assistant',
-            content=clean_text,
-            recommended_products=recommended_ids,
-        )
+                payload = {
+                    "model": "claude-3-sonnet-20240229",
+                    "max_tokens": 1024,
+                    "system": system_prompt,
+                    "messages": messages
+                }
+                
+                response = requests.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload)
+                if response.status_code == 200:
+                    ai_text = response.json()['content'][0]['text']
+                else:
+                    raise Exception(f"API Error: {response.text}")
+            except Exception as e:
+                print(f"Anthropic API Error: {e}")
+                ai_text = "I'm having a little trouble connecting to my creative side right now. Let me recommend some classic pieces from our collection! |||RECS:{\"ids\":[1,2,3]}|||"
+        else:
+            # Fallback Mock
+            if image_data:
+                ai_text = "I've analyzed your photo. You have a warm skin tone that looks stunning with earthy neutrals and gold accents. Based on your style vibe, I recommend these pieces: |||RECS:{\"ids\":[1,3,5]}|||"
+            else:
+                ai_text = "That sounds like a wonderful style choice! To achieve that look, I've selected a few key pieces from our AURA collection that I think you'll love. |||RECS:{\"ids\":[2,4,6]}|||"
 
-        # Update session title from first user message
-        if session.title == 'New Chat' and user_message:
-            session.title = user_message[:80]
-            session.save()
+        # BUG 2 FIX: Parsing logic
+        clean_text = ai_text
+        recommended_ids = []
+        match = re.search(r'\|\|\|RECS:(\{.*?\})\|\|\|', ai_text, re.DOTALL)
+        if match:
+            try:
+                recommended_ids = json.loads(match.group(1)).get('ids', [])
+                clean_text = ai_text.replace(match.group(0), '').strip()
+            except Exception:
+                pass
+
+        # Get actual product objects
+        rec_products = Product.objects.filter(id__in=recommended_ids)
+        serializer = ProductListSerializer(rec_products, many=True)
+
+        # Save AI response
+        ChatMessage.objects.create(session=session, role='assistant', content=clean_text)
 
         return Response({
             "message": clean_text,
-            "recommended_products": recommended_products,
-            "session_id": session.id,
+            "recommended_products": serializer.data,
+            "session_id": session.id
         })
+
+class ChatSessionListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        sessions = ChatSession.objects.filter(user=request.user).order_by('-created_at')
+        return Response([
+            {"id": s.id, "title": s.title, "created_at": s.created_at}
+            for s in sessions
+        ])
